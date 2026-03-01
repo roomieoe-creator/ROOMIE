@@ -1,15 +1,23 @@
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
+import ScreenWrapper from '../components/ScreenWrapper';
 import { router, useLocalSearchParams } from 'expo-router';
+import React from 'react';
 import { useState } from 'react';
 import { ScrollView, StyleSheet, TextInput, TouchableOpacity } from 'react-native';
 
 export default function TenantInfoScreen() {
-  const params = useLocalSearchParams();
-  
-  // Get data from previous screens
-  const { name, email, password, dob } = params;
-  
+  const params = useLocalSearchParams<{
+    name?: string;
+    email?: string;
+    password?: string;
+    dob?: string;
+  }>();
+
+  // Safely extract params as strings
+  const name = String(params.name || '');
+  const email = String(params.email || '');
+  const password = String(params.password || '');
+  const dob = String(params.dob || '');
+
   // Tenant fields
   const [employmentStatus, setEmploymentStatus] = useState('');
   const [annualIncome, setAnnualIncome] = useState('');
@@ -17,77 +25,76 @@ export default function TenantInfoScreen() {
   const [moveInDate, setMoveInDate] = useState('');
   const [hobbies, setHobbies] = useState('');
   const [aboutYou, setAboutYou] = useState('');
-  
-  // Error states for required fields
+
+  // Error states
   const [employmentError, setEmploymentError] = useState('');
   const [incomeError, setIncomeError] = useState('');
   const [locationError, setLocationError] = useState('');
   const [hobbiesError, setHobbiesError] = useState('');
 
-  // Validation functions for each required field
   const validateEmployment = (text: string) => {
     setEmploymentStatus(text);
-    
-    if (text.trim().length === 0) {
+    if (!text.trim()) {
       setEmploymentError('Employment status is required');
       return false;
-    } else {
-      setEmploymentError('');
-      return true;
     }
+    setEmploymentError('');
+    return true;
   };
 
   const validateIncome = (text: string) => {
     setAnnualIncome(text);
-    
-    if (text.trim().length === 0) {
+    if (!text.trim()) {
       setIncomeError('Annual income is required');
       return false;
-    } else if (!/^\d+$/.test(text.trim())) {
+    }
+    if (!/^\d+$/.test(text.trim())) {
       setIncomeError('Please enter a valid number');
       return false;
-    } else {
-      setIncomeError('');
-      return true;
     }
+    setIncomeError('');
+    return true;
   };
 
   const validateLocation = (text: string) => {
     setPreferredLocation(text);
-    
-    if (text.trim().length === 0) {
+    if (!text.trim()) {
       setLocationError('Preferred location is required');
       return false;
-    } else {
-      setLocationError('');
-      return true;
     }
+    setLocationError('');
+    return true;
   };
 
   const validateHobbies = (text: string) => {
     setHobbies(text);
-    
-    if (text.trim().length === 0) {
+    if (!text.trim()) {
       setHobbiesError('Hobbies are required');
       return false;
-    } else {
-      setHobbiesError('');
-      return true;
     }
+    setHobbiesError('');
+    return true;
+  };
+
+  const isFormValid = () => {
+    return (
+      employmentStatus.trim() &&
+      /^\d+$/.test(annualIncome.trim()) &&
+      preferredLocation.trim() &&
+      hobbies.trim()
+    );
   };
 
   const handleCompleteTenantSignUp = () => {
-    // Validate ALL required fields
     const isEmploymentValid = validateEmployment(employmentStatus);
     const isIncomeValid = validateIncome(annualIncome);
     const isLocationValid = validateLocation(preferredLocation);
     const isHobbiesValid = validateHobbies(hobbies);
-    
+
     if (!isEmploymentValid || !isIncomeValid || !isLocationValid || !isHobbiesValid) {
-      return; // Don't proceed if any validation fails
+      return;
     }
-    
-    // Collect all tenant data
+
     const tenantData = {
       name,
       email,
@@ -99,83 +106,65 @@ export default function TenantInfoScreen() {
       moveInDate: moveInDate.trim(),
       hobbies: hobbies.trim(),
       aboutYou: aboutYou.trim(),
-      accountType: 'tenant'
+      accountType: 'tenant',
     };
-    
+
     console.log('Tenant data:', tenantData);
+
     alert('Tenant account created successfully!');
     router.replace('/');
   };
 
-  const isFormValid = () => {
-    return (
-      employmentStatus.trim().length > 0 &&
-      annualIncome.trim().length > 0 &&
-      /^\d+$/.test(annualIncome.trim()) &&
-      preferredLocation.trim().length > 0 &&
-      hobbies.trim().length > 0
-    );
-  };
-
   return (
     <ScrollView contentContainerStyle={styles.scrollContainer}>
-      <ThemedView style={styles.container}>
+      <ScreenWrapper style={styles.container}>
         <ThemedText type="title">Tenant Information</ThemedText>
-        
+
         <ThemedText style={styles.subtitle}>
           Tell us about your rental preferences and yourself
         </ThemedText>
 
+        {/* Employment */}
         <ThemedText style={styles.label}>
           Employment Status <ThemedText style={styles.requiredText}>(Required)</ThemedText>
         </ThemedText>
         <TextInput
-          style={[styles.input, employmentError ? styles.inputError : null]}
-          placeholder="e.g., Employed, Student, Self-Employed"
+          style={[styles.input, employmentError && styles.inputError]}
+          placeholder="e.g., Employed, Student"
           placeholderTextColor="#666"
           value={employmentStatus}
           onChangeText={validateEmployment}
         />
-        {employmentError ? (
-          <ThemedText style={styles.errorText}>
-            {employmentError}
-          </ThemedText>
-        ) : null}
+        {employmentError && <ThemedText style={styles.errorText}>{employmentError}</ThemedText>}
 
-        {/* Annual Income - REQUIRED */}
+        {/* Income */}
         <ThemedText style={styles.label}>
           Annual Income (€) <ThemedText style={styles.requiredText}>(Required)</ThemedText>
         </ThemedText>
         <TextInput
-          style={[styles.input, incomeError ? styles.inputError : null]}
+          style={[styles.input, incomeError && styles.inputError]}
           placeholder="e.g., 45000"
           placeholderTextColor="#666"
           value={annualIncome}
           onChangeText={validateIncome}
           keyboardType="numeric"
         />
-        {incomeError ? (
-          <ThemedText style={styles.errorText}>
-            {incomeError}
-          </ThemedText>
-        ) : null}
+        {incomeError && <ThemedText style={styles.errorText}>{incomeError}</ThemedText>}
 
+        {/* Location */}
         <ThemedText style={styles.label}>
           Preferred Location <ThemedText style={styles.requiredText}>(Required)</ThemedText>
         </ThemedText>
         <TextInput
-          style={[styles.input, locationError ? styles.inputError : null]}
-          placeholder="e.g., Dublin City Centre, Cork"
+          style={[styles.input, locationError && styles.inputError]}
+          placeholder="e.g., Dublin City Centre"
           placeholderTextColor="#666"
           value={preferredLocation}
           onChangeText={validateLocation}
         />
-        {locationError ? (
-          <ThemedText style={styles.errorText}>
-            {locationError}
-          </ThemedText>
-        ) : null}
+        {locationError && <ThemedText style={styles.errorText}>{locationError}</ThemedText>}
 
+        {/* Move In */}
         <ThemedText style={styles.label}>
           Desired Move-in Date <ThemedText style={styles.optionalText}>(Optional)</ThemedText>
         </ThemedText>
@@ -187,25 +176,22 @@ export default function TenantInfoScreen() {
           onChangeText={setMoveInDate}
         />
 
+        {/* Hobbies */}
         <ThemedText style={styles.label}>
           Hobbies & Interests <ThemedText style={styles.requiredText}>(Required)</ThemedText>
         </ThemedText>
         <TextInput
-          style={[styles.input, styles.multilineInput, hobbiesError ? styles.inputError : null]}
-          placeholder="e.g., Hiking, Photography, Reading, Gaming..."
+          style={[styles.input, styles.multilineInput, hobbiesError && styles.inputError]}
+          placeholder="Hiking, Reading, Gaming..."
           placeholderTextColor="#666"
           value={hobbies}
           onChangeText={validateHobbies}
           multiline
           numberOfLines={3}
         />
-        {hobbiesError ? (
-          <ThemedText style={styles.errorText}>
-            {hobbiesError}
-          </ThemedText>
-        ) : null}
+        {hobbiesError && <ThemedText style={styles.errorText}>{hobbiesError}</ThemedText>}
 
-        {/* About You - OPTIONAL */}
+        {/* About You */}
         <ThemedText style={styles.label}>
           About You <ThemedText style={styles.optionalText}>(Optional)</ThemedText>
         </ThemedText>
@@ -219,18 +205,16 @@ export default function TenantInfoScreen() {
           numberOfLines={4}
         />
 
+        {/* Buttons */}
         <ThemedView style={styles.buttonContainer}>
-          <TouchableOpacity 
-            style={[styles.button, styles.backButton]} 
-            onPress={() => router.back()}
-          >
+          <TouchableOpacity style={[styles.button, styles.backButton]} onPress={() => router.back()}>
             <ThemedText type="defaultSemiBold" style={styles.backButtonText}>
               ← Back
             </ThemedText>
           </TouchableOpacity>
 
-          <TouchableOpacity 
-            style={[styles.button, !isFormValid() ? styles.buttonDisabled : null]} 
+          <TouchableOpacity
+            style={[styles.button, !isFormValid() && styles.buttonDisabled]}
             onPress={handleCompleteTenantSignUp}
             disabled={!isFormValid()}
           >
@@ -239,11 +223,11 @@ export default function TenantInfoScreen() {
             </ThemedText>
           </TouchableOpacity>
         </ThemedView>
-        
+
         <ThemedText style={styles.noteText}>
           * All fields are required except move-in date and "About You"
         </ThemedText>
-      </ThemedView>
+      </ScreenWrapper>
     </ScrollView>
   );
 }
@@ -270,12 +254,10 @@ const styles = StyleSheet.create({
   requiredText: {
     color: 'red',
     fontSize: 14,
-    fontWeight: 'normal',
   },
   optionalText: {
     color: '#666',
     fontSize: 14,
-    fontWeight: 'normal',
     fontStyle: 'italic',
   },
   input: {
@@ -327,7 +309,6 @@ const styles = StyleSheet.create({
   errorText: {
     color: 'red',
     fontSize: 12,
-    marginTop: -5,
     marginBottom: 10,
     marginLeft: 5,
   },

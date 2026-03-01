@@ -1,10 +1,11 @@
-import { ThemedText } from "@/components/themed-text";
-import { ThemedView } from "@/components/themed-view";
 import { Link, router } from "expo-router";
-import { useState } from "react";
+import React, { useState } from "react";
+import ScreenWrapper from "../components/ScreenWrapper";
+
 import {
   Image,
   StyleSheet,
+  Text,
   TextInput,
   TouchableOpacity,
   View,
@@ -21,7 +22,10 @@ export default function LoginScreen() {
     setEmail(text);
     setEmailError("");
 
-    if (!text) return false;
+    if (!text) {
+      setEmailError("Email is required");
+      return false;
+    }
 
     const emailRegex = /\S+@\S+\.\S+/;
     if (!emailRegex.test(text)) {
@@ -36,7 +40,10 @@ export default function LoginScreen() {
     setPassword(text);
     setPasswordError("");
 
-    if (!text) return false;
+    if (!text) {
+      setPasswordError("Password is required");
+      return false;
+    }
 
     if (text.length < 6) {
       setPasswordError("Password must be at least 6 characters");
@@ -47,16 +54,22 @@ export default function LoginScreen() {
   };
 
   const handleLogin = () => {
-    const isValid = validateEmail(email) && validatePassword(password);
+    const isValid =
+      validateEmail(email) && validatePassword(password);
+
     if (!isValid) return;
+
     router.push("/");
   };
 
   const isFormValid =
-    email.length > 0 && password.length >= 6 && !emailError && !passwordError;
+    email.length > 0 &&
+    password.length >= 6 &&
+    !emailError &&
+    !passwordError;
 
   return (
-    <ThemedView style={styles.container}>
+    <ScreenWrapper bg="#9932cc">
       <View style={styles.centerContainer}>
         <Image
           source={require("@/assets/images/RoomieLogo.png")}
@@ -64,54 +77,55 @@ export default function LoginScreen() {
           resizeMode="contain"
         />
 
-        <ThemedText type="title" style={styles.title}>
-          Roomie
-        </ThemedText>
+        <Text style={styles.title}>Roomie</Text>
 
         <View style={styles.formContainer}>
           <TextInput
             style={[styles.input, emailError && styles.inputError]}
             placeholder="Email"
-            placeholderTextColor="#rgba(255,255,255,0.6)"
+            placeholderTextColor="black"
             value={email}
             onChangeText={validateEmail}
             autoCapitalize="none"
             keyboardType="email-address"
           />
+
           {emailError ? (
-            <ThemedText style={styles.errorText}>{emailError}</ThemedText>
+            <Text style={styles.errorText}>{emailError}</Text>
           ) : null}
 
           <TextInput
             style={[styles.input, passwordError && styles.inputError]}
             placeholder="Password"
-            placeholderTextColor="#rgba(255,255,255,0.6)"
+            placeholderTextColor="black"
             value={password}
             onChangeText={validatePassword}
             secureTextEntry
           />
+
           {passwordError ? (
-            <ThemedText style={styles.errorText}>{passwordError}</ThemedText>
+            <Text style={styles.errorText}>{passwordError}</Text>
           ) : null}
 
           <TouchableOpacity
-            style={[styles.button, !isFormValid && styles.buttonDisabled]}
+            style={[
+              styles.button,
+              !isFormValid && styles.buttonDisabled,
+            ]}
             onPress={handleLogin}
             disabled={!isFormValid}
           >
-            <ThemedText type="defaultSemiBold" style={styles.buttonText}>
-              Lets Go!
-            </ThemedText>
+            <Text style={styles.buttonText}>Lets Go!</Text>
           </TouchableOpacity>
 
           <Link href="/signup">
-            <ThemedText type="link" style={styles.signupLink}>
+            <Text style={styles.signupLink}>
               Don't have an account? Sign up
-            </ThemedText>
+            </Text>
           </Link>
         </View>
       </View>
-    </ThemedView>
+    </ScreenWrapper>
   );
 }
 
@@ -127,9 +141,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
   logo: {
-    width: 150, // Adjust based on your logo size
-    height: 150, // Adjust based on your logo size
-    marginBottom: 5, // Space between logo and title
+    width: 150,
+    height: 150,
+    marginBottom: 5,
   },
   title: {
     fontSize: 42,
@@ -176,7 +190,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: 10,
-    overflow: "hidden",
   },
   button: {
     width: "100%",
@@ -197,18 +210,18 @@ const styles = StyleSheet.create({
     elevation: 8,
   },
   buttonDisabled: {
-    //backgroundColor: '#rgba(65,105,225,0.5)',
-    backgroundColor: "#dffffd",
+    backgroundColor: "rgba(65,105,225,0.4)",
     shadowOpacity: 0.1,
   },
   buttonText: {
-    color: "#8A2BE2",
+    color: "#fff",
     fontSize: 18,
     fontWeight: "600",
     letterSpacing: 0.5,
   },
   signupLink: {
-    color: "#000", //link wont seem to change color
+    color: "#000",
     padding: 10,
+    textAlign: "center",
   },
 });
