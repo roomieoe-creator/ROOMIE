@@ -1,6 +1,6 @@
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import React from 'react';
-import { wp, hp } from '../helpers/common'
+import { hp } from '../helpers/common'
 import Loading from '../components/Loading';
 
 

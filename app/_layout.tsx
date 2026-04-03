@@ -16,7 +16,7 @@ export default function Layout() {
     });
 
     return unsubscribe;
-  }, []);
+  }, [router]);
 
   return <Stack screenOptions={{ headerShown: false }} />;
 }

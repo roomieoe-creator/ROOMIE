@@ -1,4 +1,4 @@
-import { ActivityIndicator, StyleSheet, Text, View } from "react-native"
+import { ActivityIndicator, View } from "react-native"
 import React from "react"
 
 const Loading = ({size="large", color='purple'}) => {
@@ -10,4 +10,3 @@ const Loading = ({size="large", color='purple'}) => {
 }
 
 export default Loading
-const styles = StyleSheet.create({})

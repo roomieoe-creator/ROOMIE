@@ -1,9 +1,9 @@
-import { StyleSheet, Text, View, Button, Alert } from "react-native";
+import { Text, View, Button, Alert } from "react-native";
 import React from "react";
 import ScreenWrapper from "@/components/ScreenWrapper";
 import { useRouter } from "expo-router";
 
-import { auth, db, storage } from "../../lib/firebase";
+import { auth } from "../../lib/firebase";
 import { signOut } from "firebase/auth";
 
 const HomePage = () => {
@@ -16,7 +16,7 @@ const HomePage = () => {
       // redirect to login (or welcome)
       router.replace("/welcome");
 
-    } catch (error) {
+    } catch {
       Alert.alert("Error", "Failed to log out");
     }
   };
@@ -32,5 +32,3 @@ const HomePage = () => {
 };
 
 export default HomePage;
-
-const styles = StyleSheet.create({});

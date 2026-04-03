@@ -1,6 +1,6 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import React, { useState } from 'react';
-import { ScrollView, StyleSheet, TextInput, TouchableOpacity } from 'react-native';
+import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import ScreenWrapper from '../components/ScreenWrapper';
 
 export default function TenantInfoScreen() {
@@ -117,16 +117,16 @@ export default function TenantInfoScreen() {
   return (
     <ScrollView contentContainerStyle={styles.scrollContainer}>
       <ScreenWrapper style={styles.container}>
-        <ThemedText type="title">Tenant Information</ThemedText>
+        <Text style={styles.title}>Tenant Information</Text>
 
-        <ThemedText style={styles.subtitle}>
+        <Text style={styles.subtitle}>
           Tell us about your rental preferences and yourself
-        </ThemedText>
+        </Text>
 
         {/* Employment */}
-        <ThemedText style={styles.label}>
-          Employment Status <ThemedText style={styles.requiredText}>(Required)</ThemedText>
-        </ThemedText>
+        <Text style={styles.label}>
+          Employment Status <Text style={styles.requiredText}>(Required)</Text>
+        </Text>
         <TextInput
           style={[styles.input, employmentError && styles.inputError]}
           placeholder="e.g., Employed, Student"
@@ -134,12 +134,12 @@ export default function TenantInfoScreen() {
           value={employmentStatus}
           onChangeText={validateEmployment}
         />
-        {employmentError && <ThemedText style={styles.errorText}>{employmentError}</ThemedText>}
+        {employmentError && <Text style={styles.errorText}>{employmentError}</Text>}
 
         {/* Income */}
-        <ThemedText style={styles.label}>
-          Annual Income (€) <ThemedText style={styles.requiredText}>(Required)</ThemedText>
-        </ThemedText>
+        <Text style={styles.label}>
+          Annual Income (€) <Text style={styles.requiredText}>(Required)</Text>
+        </Text>
         <TextInput
           style={[styles.input, incomeError && styles.inputError]}
           placeholder="e.g., 45000"
@@ -148,12 +148,12 @@ export default function TenantInfoScreen() {
           onChangeText={validateIncome}
           keyboardType="numeric"
         />
-        {incomeError && <ThemedText style={styles.errorText}>{incomeError}</ThemedText>}
+        {incomeError && <Text style={styles.errorText}>{incomeError}</Text>}
 
         {/* Location */}
-        <ThemedText style={styles.label}>
-          Preferred Location <ThemedText style={styles.requiredText}>(Required)</ThemedText>
-        </ThemedText>
+        <Text style={styles.label}>
+          Preferred Location <Text style={styles.requiredText}>(Required)</Text>
+        </Text>
         <TextInput
           style={[styles.input, locationError && styles.inputError]}
           placeholder="e.g., Dublin City Centre"
@@ -161,11 +161,11 @@ export default function TenantInfoScreen() {
           value={preferredLocation}
           onChangeText={validateLocation}
         />
-        {locationError && <ThemedText style={styles.errorText}>{locationError}</ThemedText>}
+        {locationError && <Text style={styles.errorText}>{locationError}</Text>}
 
-        <ThemedText style={styles.label}>
-          Desired Move-in Date <ThemedText style={styles.optionalText}>(Optional)</ThemedText>
-        </ThemedText>
+        <Text style={styles.label}>
+          Desired Move-in Date <Text style={styles.optionalText}>(Optional)</Text>
+        </Text>
         <TextInput
           style={styles.input}
           placeholder="DD/MM/YYYY"
@@ -174,9 +174,9 @@ export default function TenantInfoScreen() {
           onChangeText={setMoveInDate}
         />
 
-        <ThemedText style={styles.label}>
-          Hobbies & Interests <ThemedText style={styles.requiredText}>(Required)</ThemedText>
-        </ThemedText>
+        <Text style={styles.label}>
+          Hobbies & Interests <Text style={styles.requiredText}>(Required)</Text>
+        </Text>
         <TextInput
           style={[styles.input, styles.multilineInput, hobbiesError && styles.inputError]}
           placeholder="Hiking, Reading, Gaming..."
@@ -186,11 +186,11 @@ export default function TenantInfoScreen() {
           multiline
           numberOfLines={3}
         />
-        {hobbiesError && <ThemedText style={styles.errorText}>{hobbiesError}</ThemedText>}
+        {hobbiesError && <Text style={styles.errorText}>{hobbiesError}</Text>}
 
-        <ThemedText style={styles.label}>
-          About You <ThemedText style={styles.optionalText}>(Optional)</ThemedText>
-        </ThemedText>
+        <Text style={styles.label}>
+          About You <Text style={styles.optionalText}>(Optional)</Text>
+        </Text>
         <TextInput
           style={[styles.input, styles.multilineInput]}
           placeholder="Tell us a bit about yourself..."
@@ -201,11 +201,11 @@ export default function TenantInfoScreen() {
           numberOfLines={4}
         />
 
-        <ThemedView style={styles.buttonContainer}>
+        <View style={styles.buttonContainer}>
           <TouchableOpacity style={[styles.button, styles.backButton]} onPress={() => router.back()}>
-            <ThemedText type="defaultSemiBold" style={styles.backButtonText}>
+            <Text style={styles.backButtonText}>
               ← Back
-            </ThemedText>
+            </Text>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -213,15 +213,15 @@ export default function TenantInfoScreen() {
             onPress={handleCompleteTenantSignUp}
             disabled={!isFormValid()}
           >
-            <ThemedText type="defaultSemiBold" style={styles.buttonText}>
+            <Text style={styles.buttonText}>
               Complete Sign Up
-            </ThemedText>
+            </Text>
           </TouchableOpacity>
-        </ThemedView>
+        </View>
 
-        <ThemedText style={styles.noteText}>
-          * All fields are required except move-in date and "About You"
-        </ThemedText>
+        <Text style={styles.noteText}>
+          * All fields are required except move-in date and &quot;About You&quot;
+        </Text>
       </ScreenWrapper>
     </ScrollView>
   );
@@ -239,6 +239,12 @@ const styles = StyleSheet.create({
   subtitle: {
     marginBottom: 30,
     color: '#666',
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: '700',
+    marginBottom: 12,
+    textAlign: 'center',
   },
   label: {
     fontSize: 16,
