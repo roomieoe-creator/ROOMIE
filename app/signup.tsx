@@ -138,7 +138,7 @@ export default function SignUpScreen() {
       });
 
       Alert.alert("Success", "Account created!");
-      router.replace("/homePage");
+      router.replace("/(main)/homePage" as never);
     } catch (error: any) {
       console.log("FULL ERROR:", error);
       if (error.code === "auth/email-already-in-use") {

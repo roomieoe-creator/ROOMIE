@@ -116,7 +116,8 @@ export default function TenantInfoScreen() {
 
   return (
     <ScrollView contentContainerStyle={styles.scrollContainer}>
-      <ScreenWrapper style={styles.container}>
+      <ScreenWrapper>
+        <View style={styles.container}>
         <Text style={styles.title}>Tenant Information</Text>
 
         <Text style={styles.subtitle}>
@@ -222,6 +223,7 @@ export default function TenantInfoScreen() {
         <Text style={styles.noteText}>
           * All fields are required except move-in date and &quot;About You&quot;
         </Text>
+        </View>
       </ScreenWrapper>
     </ScrollView>
   );
