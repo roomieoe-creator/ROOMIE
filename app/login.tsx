@@ -1,6 +1,10 @@
 import { Link, router } from "expo-router";
 import React, { useState } from "react";
 import ScreenWrapper from "../components/ScreenWrapper";
+import { useRouter } from 'expo-router'
+import { auth } from "@/lib/firebase";
+import { signInWithEmailAndPassword } from "firebase/auth";
+import { Alert } from "react-native";
 
 import {
   Image,
@@ -12,6 +16,7 @@ import {
 } from "react-native";
 
 export default function LoginScreen() {
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
@@ -53,13 +58,22 @@ export default function LoginScreen() {
     return true;
   };
 
-  const handleLogin = () => {
-    const isValid =
-      validateEmail(email) && validatePassword(password);
-
+  const handleLogin = async () => {
+    const isValid = validateEmail(email) && validatePassword(password);
     if (!isValid) return;
 
-    router.push("/");
+    try {
+      await signInWithEmailAndPassword(
+        auth,
+        email.trim(),
+        password.trim()
+      );
+
+      // No router.push here
+
+    } catch (error: any) {
+      Alert.alert("Error", error.message);
+    }
   };
 
   const isFormValid =
