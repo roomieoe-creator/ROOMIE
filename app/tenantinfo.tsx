@@ -1,8 +1,7 @@
-import ScreenWrapper from '../components/ScreenWrapper';
 import { router, useLocalSearchParams } from 'expo-router';
-import React from 'react';
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { ScrollView, StyleSheet, TextInput, TouchableOpacity } from 'react-native';
+import ScreenWrapper from '../components/ScreenWrapper';
 
 export default function TenantInfoScreen() {
   const params = useLocalSearchParams<{
@@ -164,7 +163,6 @@ export default function TenantInfoScreen() {
         />
         {locationError && <ThemedText style={styles.errorText}>{locationError}</ThemedText>}
 
-        {/* Move In */}
         <ThemedText style={styles.label}>
           Desired Move-in Date <ThemedText style={styles.optionalText}>(Optional)</ThemedText>
         </ThemedText>
@@ -176,7 +174,6 @@ export default function TenantInfoScreen() {
           onChangeText={setMoveInDate}
         />
 
-        {/* Hobbies */}
         <ThemedText style={styles.label}>
           Hobbies & Interests <ThemedText style={styles.requiredText}>(Required)</ThemedText>
         </ThemedText>
@@ -191,7 +188,6 @@ export default function TenantInfoScreen() {
         />
         {hobbiesError && <ThemedText style={styles.errorText}>{hobbiesError}</ThemedText>}
 
-        {/* About You */}
         <ThemedText style={styles.label}>
           About You <ThemedText style={styles.optionalText}>(Optional)</ThemedText>
         </ThemedText>
@@ -205,7 +201,6 @@ export default function TenantInfoScreen() {
           numberOfLines={4}
         />
 
-        {/* Buttons */}
         <ThemedView style={styles.buttonContainer}>
           <TouchableOpacity style={[styles.button, styles.backButton]} onPress={() => router.back()}>
             <ThemedText type="defaultSemiBold" style={styles.backButtonText}>

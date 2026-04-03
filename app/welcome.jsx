@@ -1,123 +1,86 @@
-import { Link } from 'expo-router';
-import { Image, StyleSheet, TouchableOpacity, View } from 'react-native';
-
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import React from 'react';
+import { useRouter } from "expo-router";
+import { Image, Pressable, StyleSheet, Text, View } from "react-native";
+import Button from "../components/Button";
+import ScreenWrapper from "../components/ScreenWrapper";
+import { hp, wp } from "../helpers/common";
 
 export default function HomeScreen() {
-  return (
-    <ThemedView style={styles.container}>
-      <View style={styles.centerContainer}>
-        <Image
-          source={require('@/assets/images/RoomieLogo.png')}
-          style={styles.logo}
-          resizeMode="contain"
-        />
-        
-        <ThemedText type="title" style={styles.title}>
-          Roomie
-        </ThemedText>
+    const router = useRouter();
 
-        <View style={styles.buttonContainer}>
-          <Link href="/login" asChild>
-            <TouchableOpacity style={[styles.button, styles.loginButton]}>
-              <ThemedText type="defaultSemiBold" style={styles.buttonText}>
-                Login
-              </ThemedText>
-            </TouchableOpacity>
-          </Link>
+    return (
+        <ScreenWrapper bg="#9932cc">
+          {" "}
+          {/* Light purple background */}
+          <View style={styles.logoContainer}>
+            <Image
+              style={styles.welcomeImage}
+              resizeMode="contain"
+              source={require("../assets/images/RoomieLogo.png")}
+            />
+          </View>
+          <Text style={styles.title}>Welcome to Roomie!</Text>
+          <View style={styles.buttonContainer}>
+            <Button
+              title="Getting Started"
+              buttonStyle={styles.buttonStyle}
+              onPress={() => router.push("signup")}
+            />
+    
+            <View style={styles.bottomTextContainer}>
+              <Text style={styles.infoText}>Already have an account? </Text>
+              <Pressable onPress={() => router.push("login")}>
+                <Text style={styles.loginText}>Login</Text>
+              </Pressable>
+            </View>
+          </View>
+        </ScreenWrapper>
+      );
+    }
 
-          <Link href="/signup" asChild>
-            <TouchableOpacity style={[styles.button, styles.signupButton]}>
-              <ThemedText type="defaultSemiBold" style={styles.buttonText}>
-                Sign Up
-              </ThemedText>
-            </TouchableOpacity>
-          </Link>
-        </View>
-      </View>
-    </ThemedView>
-  );
-}
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#8A2BE2',
-  },
-  centerContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-  },
-  logo: {
-    width: 150,
-    height: 150,
-    marginBottom: 5,
-  },
-  title: {
-    fontSize: 42,
-    fontWeight: '700',
-    marginBottom: 10,
-    textAlign: 'center',
-    color: '#fff',
-    letterSpacing: 1,
-  },
-  subtitle: {
-    fontSize: 18,
-    marginBottom: 60,
-    textAlign: 'center',
-    color: '#fff',
-  },
-  buttonContainer: {
-    width: '100%',
-    maxWidth: 300,
-    alignItems: 'center',
-  },
-  button: {
-    width: '100%',
-    height: 50,
-    borderRadius: 8,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 15,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 3.84,
-    elevation: 3,
-  },
-  loginButton: {
-    backgroundColor: '#007AFF',
-    shadowColor: '#007AFF',
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.3,
-    shadowRadius: 4.65,
-    elevation: 8,
-  },
-  signupButton: {
-    backgroundColor: '#34C759',
-    shadowColor: '#34C759',
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.3,
-    shadowRadius: 4.65,
-    elevation: 8,
-  },
-  buttonText: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: '600',
-    letterSpacing: 0.5,
-  },
-});
+    const styles = StyleSheet.create({
+        logoContainer: {
+          flex: 3,
+          justifyContent: "center",
+          alignItems: "center",
+          paddingTop: hp(5),
+        },
+        welcomeImage: {
+          width: wp(40), // not too big
+          height: wp(40),
+        },
+        title: {
+          flex: 0,
+          textAlign: "center",
+          fontSize: hp(3),
+          fontWeight: "bold",
+          color: "#333",
+          marginVertical: hp(2),
+        },
+        buttonContainer: {
+          flex: 2,
+          justifyContent: "flex-start",
+          width: "100%",
+          paddingHorizontal: wp(5),
+        },
+        buttonStyle: {
+          width: "100%", // full width
+          paddingVertical: hp(2),
+          borderRadius: 10,
+          backgroundColor: "#007AFF", // slightly darker purple for contrast
+        },
+        bottomTextContainer: {
+          flexDirection: "row",
+          justifyContent: "center",
+          alignItems: "center",
+          marginTop: hp(2),
+        },
+        infoText: {
+          fontSize: hp(2),
+          color: "#333",
+        },
+        loginText: {
+          fontSize: hp(2),
+          fontWeight: "bold",
+          color: "black", // more pronounced purple for clickable
+        },
+      });

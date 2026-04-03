@@ -119,15 +119,9 @@ export default function LoginScreen() {
           </TouchableOpacity>
 
           <Link href="/signup">
-<<<<<<< HEAD
-            <ThemedText type="link" style={styles.signupLink}>
-                Don't have an account? Sign up
-             </ThemedText>
-=======
             <Text style={styles.signupLink}>
               Don't have an account? Sign up
             </Text>
->>>>>>> 79f4e082703955da9ad3290c3866cbcfaf573054
           </Link>
         </View>
       </View>
@@ -226,11 +220,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   signupLink: {
-<<<<<<< HEAD
-    color: '#fff', //link wont seem to change color
-=======
-    color: "#000",
->>>>>>> 79f4e082703955da9ad3290c3866cbcfaf573054
+    color: '#f5f5f5f', //link wont seem to change color
     padding: 10,
     textAlign: "center",
   },

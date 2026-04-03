@@ -4,10 +4,10 @@ import React, { useState } from "react";
 import {
   Image,
   StyleSheet,
+  Text,
   TextInput,
   TouchableOpacity,
   View,
-  Text, // <-- Use standard Text instead of ThemedText
 } from "react-native";
 
 export default function SignUpScreen() {
@@ -25,7 +25,6 @@ export default function SignUpScreen() {
 
   const [name, setName] = useState("");
 
-  // ---------- EMAIL VALIDATION ----------
   const validateEmail = (text: string) => {
     setEmail(text);
     setEmailError("");
@@ -38,7 +37,6 @@ export default function SignUpScreen() {
     return true;
   };
 
-  // ---------- DOB ----------
   const formatDOB = (text: string) => {
     let cleaned = text.replace(/\D/g, "");
 
@@ -87,7 +85,6 @@ export default function SignUpScreen() {
     return true;
   };
 
-  // ---------- PASSWORD ----------
   const validatePassword = (text: string) => {
     setPassword(text);
 
@@ -119,7 +116,6 @@ export default function SignUpScreen() {
     return true;
   };
 
-  // ---------- SUBMIT ----------
   const handleNext = () => {
     const emailValid = validateEmail(email);
     const passValid = validatePassword(password);
@@ -145,18 +141,18 @@ export default function SignUpScreen() {
     !confirmPasswordError &&
     !dobError;
 
-  return (
-    <ScreenWrapper bg="#9932cc">
-      <View style={styles.centerContainer}>
-        <Image
-          source={require("@/assets/images/RoomieLogo.png")}
-          style={styles.logo}
-          resizeMode="contain"
-        />
+    return (
+      <ScreenWrapper bg="#9932cc">
+        <View style={styles.centerContainer}>
+          <Image
+            source={require("@/assets/images/RoomieLogo.png")}
+            style={styles.logo}
+            resizeMode="contain"
+          />
+  
+          <Text style={styles.title}>Create Account</Text>
 
-        <Text style={styles.title}>Create Account</Text>
-
-        <View style={styles.formContainer}>
+          <View style={styles.formContainer}>
           <TextInput
             style={styles.input}
             placeholder="Name"
