@@ -1,10 +1,10 @@
-import { Text, View, Button, Alert } from "react-native";
-import React from "react";
 import ScreenWrapper from "@/components/ScreenWrapper";
 import { useRouter } from "expo-router";
+import React from "react";
+import { Alert, Button, Text, View } from "react-native";
 
-import { auth } from "../../lib/firebase";
 import { signOut } from "firebase/auth";
+import { auth } from "../../lib/firebase";
 
 const HomePage = () => {
   const router = useRouter();
