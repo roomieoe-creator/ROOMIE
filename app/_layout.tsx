@@ -1,7 +1,7 @@
 import { Stack, useRouter } from "expo-router";
+import { onAuthStateChanged } from "firebase/auth";
 import React, { useEffect } from "react";
 import { auth } from "../lib/firebase";
-import { onAuthStateChanged } from "firebase/auth";
 
 export default function Layout() {
   const router = useRouter();

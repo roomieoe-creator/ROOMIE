@@ -12,7 +12,7 @@ const HomePage = () => {
   const onLogout = async () => {
     try {
       await signOut(auth);
-      router.replace("/welcome");
+      // No need to manually navigate — onAuthStateChanged will handle it
     } catch (error) {
       Alert.alert("Error", "Failed to log out");
     }
@@ -23,15 +23,23 @@ const HomePage = () => {
       <View style={styles.container}>
         <View style={styles.header}>
           <Text style={styles.title}>Roomie</Text>
+
           <View style={styles.icons}>
+            {/* Logout button */}
+            <Pressable onPress={onLogout}>
+              <Feather name="log-out" size={18} color="#000" />
+            </Pressable>
+
             <Pressable onPress={() => router.push("/welcome")}>
               <Feather name="plus-circle" size={24} color="#000" />
             </Pressable>
+
             <Pressable onPress={() => router.push("/welcome")}>
               <Feather name="bell" size={24} color="#000" />
             </Pressable>
           </View>
         </View>
+
         <View style={styles.canvas}>
           <Text style={styles.canvasText}>Your content goes here</Text>
         </View>
@@ -78,7 +86,7 @@ const styles = StyleSheet.create({
   icons: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 20,
+    gap: 14,
   },
   bottomBar: {
     position: "absolute",
@@ -96,13 +104,12 @@ const styles = StyleSheet.create({
   canvas: {
     flex: 1,
     margin: 16,
-    marginBottom: 90, // important so it doesn't hide behind bottom bar
+    marginBottom: 90,
     backgroundColor: "grey",
     borderRadius: 20,
     justifyContent: "center",
     alignItems: "center",
   },
-
   canvasText: {
     color: "#000",
     fontSize: 16,
