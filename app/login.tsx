@@ -137,9 +137,6 @@ export default function LoginScreen() {
             <Text style={styles.signupLink}>
                 Don't have an account? Sign up
              </Text>
-            <Text style={styles.signupLink}>
-              Don't have an account? Sign up
-            </Text>
           </Link>
         </View>
       </View>
