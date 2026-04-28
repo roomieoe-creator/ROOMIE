@@ -9,9 +9,9 @@ export default function Layout() {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
-        router.replace("/(main)/homePage");
+        router.replace("/(main)/homePage" as never);
       } else {
-        router.replace("/welcome");
+        router.replace("/welcome" as never);
       }
     });
 

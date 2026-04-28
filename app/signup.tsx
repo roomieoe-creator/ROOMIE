@@ -6,6 +6,8 @@ import React, { useState } from "react";
 import {
   Alert,
   Image,
+  Modal,
+  Pressable,
   ScrollView,
   StyleSheet,
   Text,
@@ -15,12 +17,77 @@ import {
 } from "react-native";
 import { auth, db } from "../lib/firebase";
 
+type UserRole = "tenant" | "landlord";
+// Tenant location options (Republic of Ireland).
+const IRISH_COUNTIES = [
+  "Carlow",
+  "Cavan",
+  "Clare",
+  "Cork",
+  "Donegal",
+  "Dublin City",
+  "Dublin, South",
+  "Dublin, North",
+  "Dublin, West",
+  "Dublin 1",
+  "Dublin 2",
+  "Dublin 3",
+  "Dublin 4",
+  "Dublin 5",
+  "Dublin 6",
+  "Dublin 7",
+  "Dublin 8",
+  "Dublin 9",
+  "Dublin 10",
+  "Dublin 11",
+  "Dublin 12",
+  "Dublin 13",
+  "Dublin 14",
+  "Dublin 15",
+  "Dublin 16",
+  "Dublin 17",
+  "Dublin 18",
+  "Dublin 20",
+  "Dublin 22",
+  "Dublin 23",
+  "Dublin 24",
+  "Galway",
+  "Kerry",
+  "Kildare",
+  "Kilkenny",
+  "Laois",
+  "Leitrim",
+  "Limerick",
+  "Longford",
+  "Louth",
+  "Mayo",
+  "Meath",
+  "Monaghan",
+  "Offaly",
+  "Roscommon",
+  "Sligo",
+  "Tipperary",
+  "Waterford",
+  "Westmeath",
+  "Wexford",
+  "Wicklow",
+];
+
 export default function SignUpScreen() {
   const router = useRouter();
 
+  // Role toggle drives which sign-up fields are shown.
+  const [role, setRole] = useState<UserRole>("tenant");
   const [firstName, setFirstName] = useState("");
+  const [fullName, setFullName] = useState("");
   const [lastName, setLastName] = useState("");
   const [username, setUsername] = useState("");
+  const [companyName, setCompanyName] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [location, setLocation] = useState("");
+  // Controls the county picker modal + in-modal search.
+  const [locationModalVisible, setLocationModalVisible] = useState(false);
+  const [locationSearch, setLocationSearch] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -48,8 +115,10 @@ export default function SignUpScreen() {
     if (!/[A-Z]/.test(text)) errors.push("a capital letter");
     if (!/\d/.test(text)) errors.push("a number");
     if (!/[!@#$%^&*(),.?\":{}|<>]/.test(text)) errors.push("a special character");
-    if (errors.length > 0) setPasswordError(`Password must contain: ${errors.join(", ")}`);
-    if (confirmPassword && text !== confirmPassword) setConfirmPasswordError("Passwords do not match");
+    if (errors.length > 0)
+      setPasswordError(`Password must contain: ${errors.join(", ")}`);
+    if (confirmPassword && text !== confirmPassword)
+      setConfirmPasswordError("Passwords do not match");
     else setConfirmPasswordError("");
   };
 
@@ -96,18 +165,40 @@ export default function SignUpScreen() {
     return true;
   };
 
-  const isFormValid =
-    firstName &&
-    lastName &&
+  const landlordPhoneDigits = phoneNumber.replace(/\D/g, "");
+  // Split tenant full name so Firestore still gets first/last fields.
+  const tenantNameParts = fullName.trim().split(/\s+/).filter(Boolean);
+  const tenantFirstName = tenantNameParts[0] || "";
+  const tenantLastName = tenantNameParts.slice(1).join(" ");
+
+  // Role-specific validation: tenant requires DOB + location.
+  const isTenantFormValid =
+    fullName.trim().length > 0 &&
     username &&
     email &&
     password &&
     confirmPassword &&
     dob.length === 10 &&
+    location &&
     !emailError &&
     !passwordError &&
     !confirmPasswordError &&
     !dobError;
+
+  // Role-specific validation: landlord requires company + phone.
+  const isLandlordFormValid =
+    firstName &&
+    lastName &&
+    companyName &&
+    landlordPhoneDigits.length >= 7 &&
+    email &&
+    password &&
+    confirmPassword &&
+    !emailError &&
+    !passwordError &&
+    !confirmPasswordError;
+
+  const isFormValid = role === "tenant" ? isTenantFormValid : isLandlordFormValid;
 
   const onSubmit = async () => {
     if (!isFormValid) {
@@ -127,18 +218,30 @@ export default function SignUpScreen() {
       const user = userCredential.user;
 
       await setDoc(doc(db, "users", user.uid), {
-        firstName: firstName.trim(),
-        lastName: lastName.trim(),
-        username: username.trim(),
+        // Keep shared identity fields consistent across both role types.
+        firstName: role === "tenant" ? tenantFirstName : firstName.trim(),
+        lastName: role === "tenant" ? tenantLastName : lastName.trim(),
         email: email.trim(),
-        DOB: dob,
-        userType: "basic",
+        userType: role,
         avatarUrl: "",
         createdAt: new Date(),
+        // Save only fields relevant to the selected role.
+        ...(role === "tenant"
+          ? {
+              fullName: fullName.trim(),
+              username: username.trim(),
+              DOB: dob,
+              location,
+            }
+          : {
+              fullName: `${firstName.trim()} ${lastName.trim()}`.trim(),
+              companyName: companyName.trim(),
+              phoneNumber: phoneNumber.trim(),
+            }),
       });
 
       Alert.alert("Success", "Account created!");
-      router.replace("/homePage");
+      router.replace("/(main)/homePage" as never);
     } catch (error: any) {
       console.log("FULL ERROR:", error);
       if (error.code === "auth/email-already-in-use") {
@@ -166,27 +269,95 @@ export default function SignUpScreen() {
         <Text style={styles.title}>Create Account</Text>
 
         <View style={styles.formContainer}>
-          <TextInput
-            style={styles.input}
-            placeholder="First Name"
-            placeholderTextColor="#999"
-            value={firstName}
-            onChangeText={setFirstName}
-          />
-          <TextInput
-            style={styles.input}
-            placeholder="Last Name"
-            placeholderTextColor="#999"
-            value={lastName}
-            onChangeText={setLastName}
-          />
-          <TextInput
-            style={styles.input}
-            placeholder="Username"
-            placeholderTextColor="#999"
-            value={username}
-            onChangeText={setUsername}
-          />
+          {/* Tab selector for tenant vs landlord flows. */}
+          <View style={styles.tabContainer}>
+            <TouchableOpacity
+              style={[styles.tabButton, role === "tenant" && styles.tabButtonActive]}
+              onPress={() => setRole("tenant")}
+              disabled={loading}
+            >
+              <Text style={[styles.tabText, role === "tenant" && styles.tabTextActive]}>
+                Tenant
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.tabButton, role === "landlord" && styles.tabButtonActive]}
+              onPress={() => setRole("landlord")}
+              disabled={loading}
+            >
+              <Text style={[styles.tabText, role === "landlord" && styles.tabTextActive]}>
+                Landlord
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* Tenant and landlord render different primary fields. */}
+          {role === "tenant" ? (
+            <>
+              <TextInput
+                style={styles.input}
+                placeholder="Full Name"
+                placeholderTextColor="#999"
+                value={fullName}
+                onChangeText={setFullName}
+              />
+
+              <TextInput
+                style={styles.input}
+                placeholder="Username"
+                placeholderTextColor="#999"
+                value={username}
+                onChangeText={setUsername}
+              />
+
+              <TextInput
+                style={[styles.input, dobError && styles.inputError]}
+                placeholder="DOB - DD/MM/YYYY"
+                placeholderTextColor="#999"
+                value={dob}
+                onChangeText={formatDOB}
+                keyboardType="numeric"
+                maxLength={10}
+              />
+              {dobError ? <Text style={styles.errorText}>{dobError}</Text> : null}
+            </>
+          ) : (
+            <>
+              <TextInput
+                style={styles.input}
+                placeholder="First Name"
+                placeholderTextColor="#999"
+                value={firstName}
+                onChangeText={setFirstName}
+              />
+              <TextInput
+                style={styles.input}
+                placeholder="Last Name"
+                placeholderTextColor="#999"
+                value={lastName}
+                onChangeText={setLastName}
+              />
+
+              <TextInput
+                style={styles.input}
+                placeholder="Company Name"
+                placeholderTextColor="#999"
+                value={companyName}
+                onChangeText={setCompanyName}
+              />
+
+              <TextInput
+                style={styles.input}
+                placeholder="Phone Number"
+                placeholderTextColor="#999"
+                value={phoneNumber}
+                onChangeText={setPhoneNumber}
+                keyboardType="phone-pad"
+              />
+            </>
+          )}
+
           <TextInput
             style={[styles.input, emailError && styles.inputError]}
             placeholder="Email"
@@ -220,25 +391,95 @@ export default function SignUpScreen() {
             <Text style={styles.errorText}>{confirmPasswordError}</Text>
           ) : null}
 
-          <TextInput
-            style={[styles.input, dobError && styles.inputError]}
-            placeholder="DOB - DD/MM/YYYY"
-            placeholderTextColor="#999"
-            value={dob}
-            onChangeText={formatDOB}
-            keyboardType="numeric"
-            maxLength={10}
-          />
-          {dobError ? <Text style={styles.errorText}>{dobError}</Text> : null}
+          {/* Tenant-only location picker, shown after credential fields. */}
+          {role === "tenant" ? (
+            <TouchableOpacity
+              style={[styles.input, styles.dropdownButton]}
+              onPress={() => {
+                setLocationSearch("");
+                setLocationModalVisible(true);
+              }}
+              disabled={loading}
+            >
+              <Text
+                style={[
+                  styles.dropdownText,
+                  !location && styles.dropdownPlaceholderText,
+                ]}
+              >
+                {location || "Location"}
+              </Text>
+            </TouchableOpacity>
+          ) : null}
 
           <TouchableOpacity
             style={[styles.button, !isFormValid && styles.buttonDisabled]}
             onPress={onSubmit}
             disabled={!isFormValid || loading}
           >
-            <Text style={styles.buttonText}>{loading ? "Creating..." : "Next ->"}</Text>
+            <Text style={styles.buttonText}>{loading ? "Creating..." : "Create Account"}</Text>
           </TouchableOpacity>
+
+          <View style={styles.bottomTextContainer}>
+            <Text style={styles.infoText}>Already have an account? </Text>
+            <Pressable
+              onPress={() => router.push("/login")}
+              disabled={loading}
+            >
+              <Text style={styles.loginText}>Login</Text>
+            </Pressable>
+          </View>
+
         </View>
+
+        <Modal
+          visible={locationModalVisible}
+          transparent
+          animationType="slide"
+          onRequestClose={() => setLocationModalVisible(false)}
+        >
+          {/* Bottom-sheet county picker with live search filter. */}
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalCard}>
+              <Text style={styles.modalTitle}>Select Location</Text>
+              <TextInput
+                style={styles.searchInput}
+                placeholder="Search county..."
+                placeholderTextColor="#999"
+                value={locationSearch}
+                onChangeText={setLocationSearch}
+                autoCapitalize="words"
+              />
+              <ScrollView style={styles.modalList}>
+                {IRISH_COUNTIES.filter((county) =>
+                  county.toLowerCase().includes(locationSearch.trim().toLowerCase())
+                ).map((county) => (
+                  <TouchableOpacity
+                    key={county}
+                    style={styles.countyOption}
+                    onPress={() => {
+                      setLocation(county);
+                      setLocationSearch("");
+                      setLocationModalVisible(false);
+                    }}
+                  >
+                    <Text style={styles.countyOptionText}>{county}</Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+              <TouchableOpacity
+                style={styles.modalCloseButton}
+                onPress={() => {
+                  setLocationSearch("");
+                  setLocationModalVisible(false);
+                }}
+              >
+                <Text style={styles.modalCloseText}>Cancel</Text>
+              </TouchableOpacity>
+
+            </View>
+          </View>
+        </Modal>
       </ScrollView>
     </ScreenWrapper>
   );
@@ -259,12 +500,38 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 32,
     fontWeight: "700",
-    marginBottom: 40,
+    marginBottom: 30,
     color: "#fff",
   },
   formContainer: {
     width: 300,
     alignItems: "center",
+  },
+  tabContainer: {
+    width: "100%",
+    flexDirection: "row",
+    backgroundColor: "rgba(255, 255, 255, 0.18)",
+    borderRadius: 25,
+    padding: 4,
+    marginBottom: 18,
+  },
+  tabButton: {
+    flex: 1,
+    height: 42,
+    justifyContent: "center",
+    alignItems: "center",
+    borderRadius: 21,
+  },
+  tabButtonActive: {
+    backgroundColor: "#fff",
+  },
+  tabText: {
+    color: "#fff",
+    fontSize: 15,
+    fontWeight: "600",
+  },
+  tabTextActive: {
+    color: "#5f1ca9",
   },
   input: {
     width: "100%",
@@ -274,6 +541,16 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     marginBottom: 15,
   },
+  dropdownButton: {
+    justifyContent: "center",
+  },
+  dropdownText: {
+    fontSize: 16,
+    color: "#222",
+  },
+  dropdownPlaceholderText: {
+    color: "#999",
+  },
   inputError: {
     borderWidth: 2,
     borderColor: "#ff4444",
@@ -282,6 +559,8 @@ const styles = StyleSheet.create({
     color: "#ff4444",
     fontSize: 12,
     marginBottom: 10,
+    width: "100%",
+    paddingHorizontal: 8,
   },
   button: {
     width: "100%",
@@ -299,5 +578,74 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 18,
     fontWeight: "600",
+  },
+  bottomTextContainer: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    marginTop: 14,
+  },
+  infoText: {
+    fontSize: 16,
+    color: "#333",
+  },
+  loginText: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "black",
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.45)",
+    justifyContent: "flex-end",
+  },
+  modalCard: {
+    backgroundColor: "#fff",
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    paddingHorizontal: 16,
+    paddingTop: 14,
+    paddingBottom: 20,
+    maxHeight: "70%",
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+    marginBottom: 12,
+    textAlign: "center",
+  },
+  searchInput: {
+    height: 44,
+    borderWidth: 1,
+    borderColor: "#ddd",
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    marginBottom: 10,
+    fontSize: 15,
+    color: "#222",
+    backgroundColor: "#fff",
+  },
+  modalList: {
+    marginBottom: 12,
+  },
+  countyOption: {
+    paddingVertical: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: "#eee",
+  },
+  countyOptionText: {
+    fontSize: 16,
+    color: "#222",
+  },
+  modalCloseButton: {
+    backgroundColor: "#f2f2f2",
+    borderRadius: 12,
+    paddingVertical: 12,
+    alignItems: "center",
+  },
+  modalCloseText: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#333",
   },
 });

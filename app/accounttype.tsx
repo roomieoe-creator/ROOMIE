@@ -44,8 +44,8 @@ export default function AccountTypeScreen() {
   };
 
   return (
-    <ScreenWrapper style={styles.container}>
-      <View style={styles.centerContainer}>
+    <ScreenWrapper bg="#8A2BE2">
+      <View style={[styles.container, styles.centerContainer]}>
         <Text style={styles.title}>Choose Account Type</Text>
 
         <Text style={styles.subtitle}>

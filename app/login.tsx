@@ -1,10 +1,13 @@
-import { Link } from "expo-router";
-import React, { useState } from "react";
-import ScreenWrapper from "../components/ScreenWrapper";
 import { auth } from "@/lib/firebase";
+import { Link, useRouter } from "expo-router";
 import { signInWithEmailAndPassword } from "firebase/auth";
+import React, { useState } from "react";
+import { Alert } from "react-native";
+import ScreenWrapper from "../components/ScreenWrapper";
+
+
+
 import {
-  Alert,
   Image,
   StyleSheet,
   Text,
@@ -14,6 +17,7 @@ import {
 } from "react-native";
 
 export default function LoginScreen() {
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
@@ -131,8 +135,8 @@ export default function LoginScreen() {
 
           <Link href="/signup">
             <Text style={styles.signupLink}>
-              Don&apos;t have an account? Sign up
-            </Text>
+                Don't have an account? Sign up
+             </Text>
           </Link>
         </View>
       </View>
@@ -231,7 +235,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   signupLink: {
-    color: "#f5f5f5",
+    color: '#f5f5f5f', //link wont seem to change color
     padding: 10,
     textAlign: "center",
   },

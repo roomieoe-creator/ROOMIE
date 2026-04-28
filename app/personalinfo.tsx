@@ -76,7 +76,8 @@ export default function PersonalInfoScreen() {
 
   return (
     <ScrollView contentContainerStyle={styles.scrollContainer}>
-      <ScreenWrapper style={styles.container}>
+      <ScreenWrapper>
+        <View style={styles.container}>
         <Text style={styles.title}>
           {accountType === "tenant"
             ? "Tenant Information"
@@ -157,6 +158,7 @@ export default function PersonalInfoScreen() {
         <Text style={styles.noteText}>
           Note: Only hobbies are required. School and description are optional.
         </Text>
+        </View>
       </ScreenWrapper>
     </ScrollView>
   );
