@@ -30,7 +30,7 @@ const HomePage = () => {
               <Feather name="log-out" size={18} color="#000" />
             </Pressable>
 
-            <Pressable onPress={() => router.push("/welcome")}>
+            <Pressable onPress={() => router.push("/landlordPage")}>
               <Feather name="plus-circle" size={24} color="#000" />
             </Pressable>
 
