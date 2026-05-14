@@ -4,20 +4,19 @@ import { createUserWithEmailAndPassword } from "firebase/auth";
 import { doc, setDoc } from "firebase/firestore";
 import React, { useState } from "react";
 import {
-  Alert,
-  Image,
-  Modal,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    Alert,
+    Image,
+    Modal,
+    Pressable,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from "react-native";
 import { auth, db } from "../lib/firebase";
 
-type UserRole = "tenant" | "landlord";
 // Tenant location options (Republic of Ireland).
 const IRISH_COUNTIES = [
   "Carlow",
@@ -75,15 +74,8 @@ const IRISH_COUNTIES = [
 
 export default function SignUpScreen() {
   const router = useRouter();
-
-  // Role toggle drives which sign-up fields are shown.
-  const [role, setRole] = useState<UserRole>("tenant");
-  const [firstName, setFirstName] = useState("");
   const [fullName, setFullName] = useState("");
-  const [lastName, setLastName] = useState("");
   const [username, setUsername] = useState("");
-  const [companyName, setCompanyName] = useState("");
-  const [phoneNumber, setPhoneNumber] = useState("");
   const [location, setLocation] = useState("");
   // Controls the county picker modal + in-modal search.
   const [locationModalVisible, setLocationModalVisible] = useState(false);
@@ -165,13 +157,11 @@ export default function SignUpScreen() {
     return true;
   };
 
-  const landlordPhoneDigits = phoneNumber.replace(/\D/g, "");
   // Split tenant full name so Firestore still gets first/last fields.
   const tenantNameParts = fullName.trim().split(/\s+/).filter(Boolean);
   const tenantFirstName = tenantNameParts[0] || "";
   const tenantLastName = tenantNameParts.slice(1).join(" ");
 
-  // Role-specific validation: tenant requires DOB + location.
   const isTenantFormValid =
     fullName.trim().length > 0 &&
     username &&
@@ -185,20 +175,7 @@ export default function SignUpScreen() {
     !confirmPasswordError &&
     !dobError;
 
-  // Role-specific validation: landlord requires company + phone.
-  const isLandlordFormValid =
-    firstName &&
-    lastName &&
-    companyName &&
-    landlordPhoneDigits.length >= 7 &&
-    email &&
-    password &&
-    confirmPassword &&
-    !emailError &&
-    !passwordError &&
-    !confirmPasswordError;
-
-  const isFormValid = role === "tenant" ? isTenantFormValid : isLandlordFormValid;
+  const isFormValid = isTenantFormValid;
 
   const onSubmit = async () => {
     if (!isFormValid) {
@@ -218,26 +195,16 @@ export default function SignUpScreen() {
       const user = userCredential.user;
 
       await setDoc(doc(db, "users", user.uid), {
-        // Keep shared identity fields consistent across both role types.
-        firstName: role === "tenant" ? tenantFirstName : firstName.trim(),
-        lastName: role === "tenant" ? tenantLastName : lastName.trim(),
+        firstName: tenantFirstName,
+        lastName: tenantLastName,
         email: email.trim(),
-        userType: role,
+        userType: "tenant",
         avatarUrl: "",
         createdAt: new Date(),
-        // Save only fields relevant to the selected role.
-        ...(role === "tenant"
-          ? {
-              fullName: fullName.trim(),
-              username: username.trim(),
-              DOB: dob,
-              location,
-            }
-          : {
-              fullName: `${firstName.trim()} ${lastName.trim()}`.trim(),
-              companyName: companyName.trim(),
-              phoneNumber: phoneNumber.trim(),
-            }),
+        fullName: fullName.trim(),
+        username: username.trim(),
+        DOB: dob,
+        location,
       });
 
       Alert.alert("Success", "Account created!");
@@ -269,94 +236,32 @@ export default function SignUpScreen() {
         <Text style={styles.title}>Create Account</Text>
 
         <View style={styles.formContainer}>
-          {/* Tab selector for tenant vs landlord flows. */}
-          <View style={styles.tabContainer}>
-            <TouchableOpacity
-              style={[styles.tabButton, role === "tenant" && styles.tabButtonActive]}
-              onPress={() => setRole("tenant")}
-              disabled={loading}
-            >
-              <Text style={[styles.tabText, role === "tenant" && styles.tabTextActive]}>
-                Tenant
-              </Text>
-            </TouchableOpacity>
+          <TextInput
+            style={styles.input}
+            placeholder="Full Name"
+            placeholderTextColor="#999"
+            value={fullName}
+            onChangeText={setFullName}
+          />
 
-            <TouchableOpacity
-              style={[styles.tabButton, role === "landlord" && styles.tabButtonActive]}
-              onPress={() => setRole("landlord")}
-              disabled={loading}
-            >
-              <Text style={[styles.tabText, role === "landlord" && styles.tabTextActive]}>
-                Landlord
-              </Text>
-            </TouchableOpacity>
-          </View>
+          <TextInput
+            style={styles.input}
+            placeholder="Username"
+            placeholderTextColor="#999"
+            value={username}
+            onChangeText={setUsername}
+          />
 
-          {/* Tenant and landlord render different primary fields. */}
-          {role === "tenant" ? (
-            <>
-              <TextInput
-                style={styles.input}
-                placeholder="Full Name"
-                placeholderTextColor="#999"
-                value={fullName}
-                onChangeText={setFullName}
-              />
-
-              <TextInput
-                style={styles.input}
-                placeholder="Username"
-                placeholderTextColor="#999"
-                value={username}
-                onChangeText={setUsername}
-              />
-
-              <TextInput
-                style={[styles.input, dobError && styles.inputError]}
-                placeholder="DOB - DD/MM/YYYY"
-                placeholderTextColor="#999"
-                value={dob}
-                onChangeText={formatDOB}
-                keyboardType="numeric"
-                maxLength={10}
-              />
-              {dobError ? <Text style={styles.errorText}>{dobError}</Text> : null}
-            </>
-          ) : (
-            <>
-              <TextInput
-                style={styles.input}
-                placeholder="First Name"
-                placeholderTextColor="#999"
-                value={firstName}
-                onChangeText={setFirstName}
-              />
-              <TextInput
-                style={styles.input}
-                placeholder="Last Name"
-                placeholderTextColor="#999"
-                value={lastName}
-                onChangeText={setLastName}
-              />
-
-              <TextInput
-                style={styles.input}
-                placeholder="Company Name"
-                placeholderTextColor="#999"
-                value={companyName}
-                onChangeText={setCompanyName}
-              />
-
-              <TextInput
-                style={styles.input}
-                placeholder="Phone Number"
-                placeholderTextColor="#999"
-                value={phoneNumber}
-                onChangeText={setPhoneNumber}
-                keyboardType="phone-pad"
-              />
-            </>
-          )}
+          <TextInput
+            style={[styles.input, dobError && styles.inputError]}
+            placeholder="DOB - DD/MM/YYYY"
+            placeholderTextColor="#999"
+            value={dob}
+            onChangeText={formatDOB}
+            keyboardType="numeric"
+            maxLength={10}
+          />
+          {dobError ? <Text style={styles.errorText}>{dobError}</Text> : null}
 
           <TextInput
             style={[styles.input, emailError && styles.inputError]}
@@ -391,26 +296,23 @@ export default function SignUpScreen() {
             <Text style={styles.errorText}>{confirmPasswordError}</Text>
           ) : null}
 
-          {/* Tenant-only location picker, shown after credential fields. */}
-          {role === "tenant" ? (
-            <TouchableOpacity
-              style={[styles.input, styles.dropdownButton]}
-              onPress={() => {
-                setLocationSearch("");
-                setLocationModalVisible(true);
-              }}
-              disabled={loading}
+          <TouchableOpacity
+            style={[styles.input, styles.dropdownButton]}
+            onPress={() => {
+              setLocationSearch("");
+              setLocationModalVisible(true);
+            }}
+            disabled={loading}
+          >
+            <Text
+              style={[
+                styles.dropdownText,
+                !location && styles.dropdownPlaceholderText,
+              ]}
             >
-              <Text
-                style={[
-                  styles.dropdownText,
-                  !location && styles.dropdownPlaceholderText,
-                ]}
-              >
-                {location || "Location"}
-              </Text>
-            </TouchableOpacity>
-          ) : null}
+              {location || "Location"}
+            </Text>
+          </TouchableOpacity>
 
           <TouchableOpacity
             style={[styles.button, !isFormValid && styles.buttonDisabled]}

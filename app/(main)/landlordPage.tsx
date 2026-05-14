@@ -17,15 +17,15 @@ import {
 export default function LandlordPage() {
   const router = useRouter();
 
-  const [image, setImage] = useState(null);
+  const [image] = useState<string | null>(null);
   const [address, setAddress] = useState("");
   const [description, setDescription] = useState("");
   const [price, setPrice] = useState("");
   const [showFacilities, setShowFacilities] = useState(false);
-  const [selectedFacilities, setSelectedFacilities] = useState([]);
+  const [selectedFacilities, setSelectedFacilities] = useState<string[]>([]);
 
   // Toggle facility
-  const toggleFacility = (facility) => {
+  const toggleFacility = (facility: string) => {
     if (selectedFacilities.includes(facility)) {
       setSelectedFacilities(selectedFacilities.filter((f) => f !== facility));
     } else {

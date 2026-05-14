@@ -34,7 +34,7 @@ const HomePage = () => {
               <Feather name="plus-circle" size={24} color="#000" />
             </Pressable>
 
-            <Pressable onPress={() => router.push("/welcome")}>
+            <Pressable onPress={() => router.push("/notificationPage")}>
               <Feather name="bell" size={24} color="#000" />
             </Pressable>
           </View>
@@ -53,7 +53,7 @@ const HomePage = () => {
             <Feather name="message-circle" size={24} />
           </Pressable>
 
-          <Pressable style={styles.icons}>
+          <Pressable style={styles.icons} onPress={() => router.push("/profilePage")}>
             <Feather name="user" size={24} />
           </Pressable>
         </View>

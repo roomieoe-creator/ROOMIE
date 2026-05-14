@@ -2,19 +2,16 @@ import { auth } from "@/lib/firebase";
 import { Link, useRouter } from "expo-router";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import React, { useState } from "react";
-import { Alert } from "react-native";
-import ScreenWrapper from "../components/ScreenWrapper";
-
-
-
 import {
-  Image,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    Alert,
+    Image,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from "react-native";
+import ScreenWrapper from "../components/ScreenWrapper";
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -69,8 +66,6 @@ export default function LoginScreen() {
         email.trim(),
         password.trim()
       );
-
-      // No router.push here
 
     } catch (error: any) {
       Alert.alert("Error", error.message);

@@ -9,8 +9,6 @@ export default function HomeScreen() {
 
     return (
         <ScreenWrapper bg="#9932cc">
-          {" "}
-          {/* Light purple background */}
           <View style={styles.logoContainer}>
             <Image
               style={styles.welcomeImage}
