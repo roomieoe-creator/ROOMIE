@@ -3,7 +3,7 @@ import { Feather, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { signOut } from "firebase/auth";
 import React from "react";
-import { Alert, Pressable, StyleSheet, Text, View } from "react-native";
+import { Alert, Image, Pressable, StyleSheet, Text, View } from "react-native";
 import { auth } from "../../lib/firebase";
 
 const HomePage = () => {
@@ -22,24 +22,25 @@ const HomePage = () => {
     <ScreenWrapper>
       <View style={styles.container}>
         <View style={styles.header}>
-          <Text style={styles.title}>Roomie</Text>
+          <View style={styles.brand}>
+            <Image source={require("@/assets/images/Roomie_logo_2.png")} style={styles.logo} />
+            <Text style={styles.title}>Roomie</Text>
+          </View>
 
           <View style={styles.icons}>
-            {/* Logout button */}
-            <Pressable onPress={onLogout}>
-              <Feather name="log-out" size={18} color="#000" />
+            <Pressable onPress={() => router.push("/searchUserPage") }>
+              <Feather name="search" size={24} color="#000" />
             </Pressable>
 
-            <Pressable onPress={() => router.push("/landlordPage")}>
+            <Pressable onPress={() => router.push("/landlordPage") }>
               <Feather name="plus-circle" size={24} color="#000" />
             </Pressable>
 
-            <Pressable onPress={() => router.push("/notificationPage")}>
+            <Pressable onPress={() => router.push("/notificationPage") }>
               <Feather name="bell" size={24} color="#000" />
             </Pressable>
-          </View>
-        </View>
-
+          </View>  
+         </View>      
         <View style={styles.canvas}>
           <Text style={styles.canvasText}>Your content goes here</Text>
         </View>
@@ -79,6 +80,16 @@ const styles = StyleSheet.create({
     color: "black",
     fontSize: 22,
     fontWeight: "bold",
+  },
+  brand: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  logo: {
+    width: 50,
+    height: 50,
+    marginRight: 10,
+    resizeMode: 'contain',
   },
   pill: {
     position: "absolute",
