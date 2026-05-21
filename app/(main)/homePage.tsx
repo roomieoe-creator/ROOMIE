@@ -12,7 +12,6 @@ const HomePage = () => {
   const onLogout = async () => {
     try {
       await signOut(auth);
-      // No need to manually navigate — onAuthStateChanged will handle it
     } catch (error) {
       Alert.alert("Error", "Failed to log out");
     }

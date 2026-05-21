@@ -1,6 +1,6 @@
 import ScreenWrapper from "@/components/ScreenWrapper";
 import { useRouter } from "expo-router";
-import { createUserWithEmailAndPassword } from "firebase/auth";
+import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 import { doc, setDoc } from "firebase/firestore";
 import React, { useState } from "react";
 import {
@@ -17,7 +17,6 @@ import {
 } from "react-native";
 import { auth, db } from "../lib/firebase";
 
-// Tenant location options (Republic of Ireland).
 const IRISH_COUNTIES = [
   "Carlow",
   "Cavan",
@@ -193,6 +192,14 @@ export default function SignUpScreen() {
       );
 
       const user = userCredential.user;
+
+      // Set the auth profile displayName so the app can show username without
+      // needing a Firestore read (helps when Firestore rules restrict reads).
+      try {
+        await updateProfile(user, { displayName: username.trim() });
+      } catch (e) {
+        console.log('Failed to update auth profile displayName:', e);
+      }
 
       await setDoc(doc(db, "users", user.uid), {
         firstName: tenantFirstName,
