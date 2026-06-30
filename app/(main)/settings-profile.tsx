@@ -1,8 +1,8 @@
 import ScreenWrapper from '@/components/ScreenWrapper';
 import { Ionicons } from "@expo/vector-icons";
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
 import { signOut } from 'firebase/auth';
-import React from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { auth } from '../../lib/firebase';
 
@@ -30,6 +30,19 @@ const SettingsProfile = () => {
 
       <View style={styles.content}>
         <Text style={styles.title}>Settings</Text>
+
+        {__DEV__ ? (
+          <Pressable
+            style={styles.devButton}
+            onPress={async () => {
+              await AsyncStorage.setItem('filterAccessedFromSettings', 'true');
+              await AsyncStorage.setItem('hasCompletedFilter', 'false');
+              router.replace('/post-signup');
+            }}
+          >
+            <Text style={styles.devButtonText}>Filter Settings</Text>
+          </Pressable>
+        ) : null}
 
         <Pressable style={styles.logoutButton} onPress={onLogout}>
           <Text style={styles.logoutText}>Log Out</Text>
@@ -68,6 +81,18 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: '700',
     marginBottom: 24,
+  },
+  devButton: {
+    backgroundColor: '#8A2BE2',
+    paddingVertical: 14,
+    paddingHorizontal: 28,
+    borderRadius: 25,
+    marginBottom: 16,
+  },
+  devButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '700',
   },
   logoutButton: {
     backgroundColor: '#8A2BE2',

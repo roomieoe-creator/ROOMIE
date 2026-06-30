@@ -1,7 +1,7 @@
 import { auth } from "@/lib/firebase";
 import { Link, useRouter } from "expo-router";
 import { signInWithEmailAndPassword } from "firebase/auth";
-import React, { useState } from "react";
+import { useState } from "react";
 import {
     Alert,
     Image,

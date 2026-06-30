@@ -1,9 +1,10 @@
 import ScreenWrapper from '@/components/ScreenWrapper';
 import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
+import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
     ActivityIndicator,
     Alert,
@@ -15,7 +16,6 @@ import {
     TouchableOpacity,
     View
 } from 'react-native';
-import { launchCamera, launchImageLibrary } from 'react-native-image-picker';
 import { Colors } from '../../constants/theme';
 import { hp } from '../../helpers/common';
 import { auth, db, storage } from '../../lib/firebase';
@@ -97,46 +97,44 @@ const ProfilePage = () => {
     }
   };
 
-  const handlePickerResult = (response: any) => {
-    if (response.didCancel) return;
-    if (response.errorCode) {
-      Alert.alert('Error', response.errorMessage || 'Unable to select image');
-      return;
-    }
-    const asset = response.assets?.[0];
+  const handlePickerResult = async (result: ImagePicker.ImagePickerResult) => {
+    if ('canceled' in result && result.canceled) return;
+    const asset = result.assets?.[0];
     if (asset?.uri) {
       setProfileImageUri(asset.uri);
     }
   };
 
-  const chooseFromLibrary = () => {
-    launchImageLibrary(
-      {
-        mediaType: 'photo',
-        selectionLimit: 1,
-      },
-      handlePickerResult,
-    );
+  const chooseFromLibrary = async () => {
+    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!permission.granted) {
+      Alert.alert('Permission required', 'Media library permissions are required to choose a photo.');
+      return;
+    }
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      quality: 0.8,
+    });
+    await handlePickerResult(result);
   };
 
-  const takePicture = () => {
-    launchCamera(
-      {
-        mediaType: 'photo',
-        saveToPhotos: true,
-      },
-      handlePickerResult,
-    );
+  const takePicture = async () => {
+    const permission = await ImagePicker.requestCameraPermissionsAsync();
+    if (!permission.granted) {
+      Alert.alert('Permission required', 'Camera permissions are required to take a photo.');
+      return;
+    }
+    const result = await ImagePicker.launchCameraAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      quality: 0.8,
+    });
+    await handlePickerResult(result);
   };
 
-  const chooseFile = () => {
-    launchImageLibrary(
-      {
-        mediaType: 'photo',
-        selectionLimit: 1,
-      },
-      handlePickerResult,
-    );
+  const chooseFile = async () => {
+    await chooseFromLibrary();
   };
 
   const handleProfilePicPress = () => {

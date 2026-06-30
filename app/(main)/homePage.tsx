@@ -2,7 +2,6 @@ import ScreenWrapper from "@/components/ScreenWrapper";
 import { Feather, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { signOut } from "firebase/auth";
-import React from "react";
 import { Alert, Image, Pressable, StyleSheet, Text, View } from "react-native";
 import { auth } from "../../lib/firebase";
 
@@ -46,7 +45,7 @@ const HomePage = () => {
 
         <View style={styles.bottomBar}>
           <Pressable style={styles.icons}>
-            <MaterialCommunityIcons name="party-popper" size={24} />
+            <MaterialCommunityIcons name="map-marker" size={24} />
           </Pressable>
 
           <Pressable style={styles.icons}>

@@ -17,7 +17,7 @@ const firebaseConfig = {
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
-export const auth = getAuth(app); // for login/signup
+export const auth = getAuth(app);
 
-export const db = getFirestore(app); // for the users / posts/ groups / messages
+export const db = getFirestore(app); // for the users / posts / groups / messages
 export const storage = getStorage(app); // for the images

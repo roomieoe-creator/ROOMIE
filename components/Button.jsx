@@ -1,7 +1,6 @@
 import { Pressable, StyleSheet, Text, View } from "react-native";
-import React from 'react';
-import { hp } from '../helpers/common'
 import Loading from '../components/Loading';
+import { hp } from '../helpers/common';
 
 
 const Button = ({
@@ -10,6 +9,7 @@ const Button = ({
     title='',
     onPress=()=>{},
     loading = false, /* This loading will be good for when we need to fetch the user data*/
+    disabled = false,
     hasShadow = true, /* control the shadow of a button */
 }) => {
 
@@ -29,7 +29,7 @@ const Button = ({
         )
     }
     return(
-        <Pressable onPress={onPress} style={[styles.button, buttonStyle, hasShadow && shadowStyle]}>
+        <Pressable onPress={disabled ? undefined : onPress} disabled={disabled} style={[styles.button, buttonStyle, disabled && styles.disabled, hasShadow && shadowStyle]}>
             <Text style={[styles.text, textStyle]}>{title}</Text>
         </Pressable>
     )
@@ -50,6 +50,9 @@ const styles = StyleSheet.create({
         fontSize: hp(2.5),
         color: 'black',
         fontWeight: 'bold'
+    },
+    disabled: {
+        opacity: 0.5,
     }
 
 });

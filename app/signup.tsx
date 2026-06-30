@@ -1,12 +1,12 @@
 import ScreenWrapper from "@/components/ScreenWrapper";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
-import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
-import { doc, setDoc } from "firebase/firestore";
-import React, { useState } from "react";
+import { updateEmail, updateProfile } from "firebase/auth";
+import { doc, getDoc, setDoc } from "firebase/firestore";
+import { useEffect, useState } from "react";
 import {
     Alert,
     Image,
-    Modal,
     Pressable,
     ScrollView,
     StyleSheet,
@@ -17,72 +17,15 @@ import {
 } from "react-native";
 import { auth, db } from "../lib/firebase";
 
-const IRISH_COUNTIES = [
-  "Carlow",
-  "Cavan",
-  "Clare",
-  "Cork",
-  "Donegal",
-  "Dublin City",
-  "Dublin, South",
-  "Dublin, North",
-  "Dublin, West",
-  "Dublin 1",
-  "Dublin 2",
-  "Dublin 3",
-  "Dublin 4",
-  "Dublin 5",
-  "Dublin 6",
-  "Dublin 7",
-  "Dublin 8",
-  "Dublin 9",
-  "Dublin 10",
-  "Dublin 11",
-  "Dublin 12",
-  "Dublin 13",
-  "Dublin 14",
-  "Dublin 15",
-  "Dublin 16",
-  "Dublin 17",
-  "Dublin 18",
-  "Dublin 20",
-  "Dublin 22",
-  "Dublin 23",
-  "Dublin 24",
-  "Galway",
-  "Kerry",
-  "Kildare",
-  "Kilkenny",
-  "Laois",
-  "Leitrim",
-  "Limerick",
-  "Longford",
-  "Louth",
-  "Mayo",
-  "Meath",
-  "Monaghan",
-  "Offaly",
-  "Roscommon",
-  "Sligo",
-  "Tipperary",
-  "Waterford",
-  "Westmeath",
-  "Wexford",
-  "Wicklow",
-];
-
 export default function SignUpScreen() {
   const router = useRouter();
-  const [fullName, setFullName] = useState("");
-  const [username, setUsername] = useState("");
-  const [location, setLocation] = useState("");
-  // Controls the county picker modal + in-modal search.
-  const [locationModalVisible, setLocationModalVisible] = useState(false);
-  const [locationSearch, setLocationSearch] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [secondName, setSecondName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [dob, setDob] = useState("");
+  const [isExistingUser, setIsExistingUser] = useState(false);
 
   const [emailError, setEmailError] = useState("");
   const [passwordError, setPasswordError] = useState("");
@@ -90,6 +33,53 @@ export default function SignUpScreen() {
   const [dobError, setDobError] = useState("");
 
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const loadExistingProfile = async () => {
+      const user = auth.currentUser;
+      if (!user) return;
+
+      setIsExistingUser(true);
+
+      setEmail(user.email ?? "");
+
+      try {
+        const snapshot = await getDoc(doc(db, "users", user.uid));
+        if (snapshot.exists()) {
+          const data = snapshot.data();
+          if (data.firstName) setFirstName(data.firstName);
+          else if (data.fullName) setFirstName(data.fullName);
+          if (data.secondName) setSecondName(data.secondName);
+          else if (data.username) setSecondName(data.username);
+          if (data.DOB) setDob(data.DOB);
+        }
+      } catch (error) {
+        console.log("Error loading saved signup data:", error);
+      }
+    };
+
+    const loadPendingIfAny = async () => {
+      try {
+        const pendingRaw = await AsyncStorage.getItem("pendingSignup");
+        if (pendingRaw && !auth.currentUser) {
+          const pending = JSON.parse(pendingRaw);
+          if (pending.firstName) setFirstName(pending.firstName);
+          else if (pending.fullName) setFirstName(pending.fullName);
+          if (pending.secondName) setSecondName(pending.secondName);
+          else if (pending.username) setSecondName(pending.username);
+          if (pending.email) setEmail(pending.email);
+          if (pending.DOB) setDob(pending.DOB);
+          // keep password blank for safety; user can re-enter if needed
+          setIsExistingUser(false);
+        }
+      } catch (e) {
+        console.log('No pending signup found:', e);
+      }
+    };
+
+    loadExistingProfile();
+    loadPendingIfAny();
+  }, []);
 
   const validateEmail = (text: string) => {
     setEmail(text);
@@ -156,19 +146,12 @@ export default function SignUpScreen() {
     return true;
   };
 
-  // Split tenant full name so Firestore still gets first/last fields.
-  const tenantNameParts = fullName.trim().split(/\s+/).filter(Boolean);
-  const tenantFirstName = tenantNameParts[0] || "";
-  const tenantLastName = tenantNameParts.slice(1).join(" ");
-
   const isTenantFormValid =
-    fullName.trim().length > 0 &&
-    username &&
+    firstName.trim().length > 0 &&
+    secondName.trim().length > 0 &&
     email &&
-    password &&
-    confirmPassword &&
+    (isExistingUser || (password && confirmPassword)) &&
     dob.length === 10 &&
-    location &&
     !emailError &&
     !passwordError &&
     !confirmPasswordError &&
@@ -184,38 +167,49 @@ export default function SignUpScreen() {
 
     try {
       setLoading(true);
+      const currentUser = auth.currentUser;
 
-      const userCredential = await createUserWithEmailAndPassword(
-        auth,
-        email.trim(),
-        password.trim()
-      );
+      if (currentUser) {
+        if (currentUser.email !== email.trim()) {
+          await updateEmail(currentUser, email.trim());
+        }
 
-      const user = userCredential.user;
+        try {
+          await updateProfile(currentUser, { displayName: `${firstName.trim()} ${secondName.trim()}` });
+        } catch (e) {
+          console.log('Failed to update auth profile displayName:', e);
+        }
 
-      // Set the auth profile displayName so the app can show username without
-      // needing a Firestore read (helps when Firestore rules restrict reads).
-      try {
-        await updateProfile(user, { displayName: username.trim() });
-      } catch (e) {
-        console.log('Failed to update auth profile displayName:', e);
+        await setDoc(
+          doc(db, "users", currentUser.uid),
+          {
+            firstName: firstName.trim(),
+            secondName: secondName.trim(),
+            email: email.trim(),
+            userType: "tenant",
+            avatarUrl: "",
+            fullName: `${firstName.trim()} ${secondName.trim()}`,
+            username: secondName.trim(),
+            DOB: dob,
+            hasCompletedFilter: false,
+          },
+          { merge: true }
+        );
+
+        Alert.alert("Success", "Account details updated.");
+        router.replace("/post-signup" as never);
+      } else {
+        // Persist the signup data temporarily and continue to post-signup
+        const pending = {
+          firstName: firstName.trim(),
+          secondName: secondName.trim(),
+          email: email.trim(),
+          password: password.trim(),
+          DOB: dob,
+        };
+        await AsyncStorage.setItem("pendingSignup", JSON.stringify(pending));
+        router.replace("/post-signup" as never);
       }
-
-      await setDoc(doc(db, "users", user.uid), {
-        firstName: tenantFirstName,
-        lastName: tenantLastName,
-        email: email.trim(),
-        userType: "tenant",
-        avatarUrl: "",
-        createdAt: new Date(),
-        fullName: fullName.trim(),
-        username: username.trim(),
-        DOB: dob,
-        location,
-      });
-
-      Alert.alert("Success", "Account created!");
-      router.replace("/(main)/homePage" as never);
     } catch (error: any) {
       console.log("FULL ERROR:", error);
       if (error.code === "auth/email-already-in-use") {
@@ -234,7 +228,7 @@ export default function SignUpScreen() {
 
   return (
     <ScreenWrapper bg="#9932cc">
-      <ScrollView contentContainerStyle={styles.scrollContainer}>
+      <ScrollView contentContainerStyle={styles.scrollContainer} keyboardShouldPersistTaps="handled">
         <Image
           source={require("@/assets/images/RoomieLogo.png")}
           style={styles.logo}
@@ -245,18 +239,18 @@ export default function SignUpScreen() {
         <View style={styles.formContainer}>
           <TextInput
             style={styles.input}
-            placeholder="Full Name"
+            placeholder="First Name"
             placeholderTextColor="#999"
-            value={fullName}
-            onChangeText={setFullName}
+            value={firstName}
+            onChangeText={setFirstName}
           />
 
           <TextInput
             style={styles.input}
-            placeholder="Username"
+            placeholder="Second Name"
             placeholderTextColor="#999"
-            value={username}
-            onChangeText={setUsername}
+            value={secondName}
+            onChangeText={setSecondName}
           />
 
           <TextInput
@@ -304,29 +298,11 @@ export default function SignUpScreen() {
           ) : null}
 
           <TouchableOpacity
-            style={[styles.input, styles.dropdownButton]}
-            onPress={() => {
-              setLocationSearch("");
-              setLocationModalVisible(true);
-            }}
-            disabled={loading}
-          >
-            <Text
-              style={[
-                styles.dropdownText,
-                !location && styles.dropdownPlaceholderText,
-              ]}
-            >
-              {location || "Location"}
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
             style={[styles.button, !isFormValid && styles.buttonDisabled]}
             onPress={onSubmit}
             disabled={!isFormValid || loading}
           >
-            <Text style={styles.buttonText}>{loading ? "Creating..." : "Create Account"}</Text>
+            <Text style={styles.buttonText}>{loading ? "Continuing..." : "Continue"}</Text>
           </TouchableOpacity>
 
           <View style={styles.bottomTextContainer}>
@@ -341,54 +317,6 @@ export default function SignUpScreen() {
 
         </View>
 
-        <Modal
-          visible={locationModalVisible}
-          transparent
-          animationType="slide"
-          onRequestClose={() => setLocationModalVisible(false)}
-        >
-          {/* Bottom-sheet county picker with live search filter. */}
-          <View style={styles.modalOverlay}>
-            <View style={styles.modalCard}>
-              <Text style={styles.modalTitle}>Select Location</Text>
-              <TextInput
-                style={styles.searchInput}
-                placeholder="Search county..."
-                placeholderTextColor="#999"
-                value={locationSearch}
-                onChangeText={setLocationSearch}
-                autoCapitalize="words"
-              />
-              <ScrollView style={styles.modalList}>
-                {IRISH_COUNTIES.filter((county) =>
-                  county.toLowerCase().includes(locationSearch.trim().toLowerCase())
-                ).map((county) => (
-                  <TouchableOpacity
-                    key={county}
-                    style={styles.countyOption}
-                    onPress={() => {
-                      setLocation(county);
-                      setLocationSearch("");
-                      setLocationModalVisible(false);
-                    }}
-                  >
-                    <Text style={styles.countyOptionText}>{county}</Text>
-                  </TouchableOpacity>
-                ))}
-              </ScrollView>
-              <TouchableOpacity
-                style={styles.modalCloseButton}
-                onPress={() => {
-                  setLocationSearch("");
-                  setLocationModalVisible(false);
-                }}
-              >
-                <Text style={styles.modalCloseText}>Cancel</Text>
-              </TouchableOpacity>
-
-            </View>
-          </View>
-        </Modal>
       </ScrollView>
     </ScreenWrapper>
   );
