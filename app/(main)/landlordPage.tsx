@@ -1,30 +1,33 @@
 import ScreenWrapper from "@/components/ScreenWrapper";
+import { auth } from "@/lib/firebase";
+import { createListing } from "@/services/listingService";
+import { uploadImage } from "@/services/storageService";
 import { Ionicons } from "@expo/vector-icons";
+import * as ImagePicker from "expo-image-picker";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
-    Button,
-    Image,
-    Modal,
-    Pressable,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    View,
+  Button,
+  Image,
+  Modal,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
 } from "react-native";
 
 export default function LandlordPage() {
   const router = useRouter();
 
-  const [image] = useState<string | null>(null);
+  const [image, setImage] = useState<string | null>(null);
   const [address, setAddress] = useState("");
   const [description, setDescription] = useState("");
   const [price, setPrice] = useState("");
   const [showFacilities, setShowFacilities] = useState(false);
   const [selectedFacilities, setSelectedFacilities] = useState<string[]>([]);
 
-  // Toggle facility
   const toggleFacility = (facility: string) => {
     if (selectedFacilities.includes(facility)) {
       setSelectedFacilities(selectedFacilities.filter((f) => f !== facility));
@@ -33,19 +36,91 @@ export default function LandlordPage() {
     }
   };
 
+  const pickImage = async () => {
+    try {
+      const permission =
+        await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+      if (!permission.granted) {
+        alert("Permission to access photos is required.");
+        return;
+      }
+
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        quality: 0.8,
+      });
+
+      if (!result.canceled) {
+        setImage(result.assets[0].uri);
+      }
+    } catch (error) {
+      console.error("Error selecting image:", error);
+    }
+  };
+
+  const handlePost = async () => {
+    if (!image) {
+      alert("Please add a photo.");
+      return;
+    }
+    if (!address.trim()) {
+      alert("Please enter an address.");
+      return;
+    }
+    if (!price.trim()) {
+      alert("Please enter a price.");
+      return;
+    }
+    if (selectedFacilities.length === 0) {
+      alert("Please select at least one facility.");
+      return;
+    }
+
+    try {
+      const user = auth.currentUser;
+      if (!user) return;
+
+      let imageUrls: string[] = [];
+
+      if (image) {
+        const url = await uploadImage(
+          image,
+          `listings/${user.uid}/${Date.now()}`,
+        );
+        imageUrls = [url];
+      }
+
+      await createListing({
+        ownerId: user.uid,
+        address,
+        description,
+        price: Number(price),
+        facilities: selectedFacilities,
+        region: "dublin-central",
+        imageUrls,
+      });
+
+      console.log("Listing created");
+      router.push("/homePage");
+    } catch (err) {
+      console.log("Error creating listing:", err);
+    }
+  };
+
   return (
     <ScreenWrapper>
       <ScrollView contentContainerStyle={styles.container}>
         <View style={styles.header}>
           <Text style={styles.title}>Roomie</Text>
-
           <Pressable onPress={() => router.push("/homePage")}>
             <Ionicons name="arrow-back-circle-outline" size={24} color="#000" />
           </Pressable>
         </View>
 
         {/* Image Upload */}
-        <Pressable style={styles.imageContainer}>
+        <Pressable style={styles.imageContainer} onPress={pickImage}>
           {image ? (
             <Image source={{ uri: image }} style={styles.image} />
           ) : (
@@ -95,31 +170,30 @@ export default function LandlordPage() {
               <View style={styles.modalContent}>
                 <Text style={styles.modalTitle}>Select Facilities</Text>
 
-                {["WiFi", "Parking", "Balcony", "Laundry", "Smoking"].map((item) => (
-                  <Pressable
-                    key={item}
-                    style={styles.option}
-                    onPress={() => toggleFacility(item)}
-                  >
-                    <Text
-                      style={{
-                        color: selectedFacilities.includes(item)
-                          ? "#9932cc"
-                          : "black",
-                        fontWeight: selectedFacilities.includes(item)
-                          ? "bold"
-                          : "normal",
-                      }}
+                {["WiFi", "Parking", "Balcony", "Laundry", "Smoking"].map(
+                  (item) => (
+                    <Pressable
+                      key={item}
+                      style={styles.option}
+                      onPress={() => toggleFacility(item)}
                     >
-                      {item}
-                    </Text>
-                  </Pressable>
-                ))}
+                      <Text
+                        style={{
+                          color: selectedFacilities.includes(item)
+                            ? "#9932cc"
+                            : "black",
+                          fontWeight: selectedFacilities.includes(item)
+                            ? "bold"
+                            : "normal",
+                        }}
+                      >
+                        {item}
+                      </Text>
+                    </Pressable>
+                  ),
+                )}
 
-                <Button
-                  title="Close"
-                  onPress={() => setShowFacilities(false)}
-                />
+                <Button title="Add" onPress={() => setShowFacilities(false)} />
               </View>
             </View>
           </Modal>
@@ -138,7 +212,7 @@ export default function LandlordPage() {
         </View>
 
         {/* Submit Button */}
-        <Pressable style={styles.button}>
+        <Pressable style={styles.button} onPress={handlePost}>
           <Text style={styles.buttonText}>Post Listing</Text>
         </Pressable>
       </ScrollView>
@@ -163,7 +237,6 @@ const styles = StyleSheet.create({
     fontSize: 22,
     fontWeight: "bold",
   },
-
   imageContainer: {
     height: 200,
     borderRadius: 16,
@@ -190,7 +263,6 @@ const styles = StyleSheet.create({
     color: "#888",
     marginTop: 4,
   },
-
   inputGroup: {
     marginBottom: 15,
   },
@@ -209,7 +281,6 @@ const styles = StyleSheet.create({
     height: 120,
     textAlignVertical: "top",
   },
-
   button: {
     marginTop: 20,
     backgroundColor: "#9932cc",
@@ -222,8 +293,6 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     fontSize: 16,
   },
-
-  // ✅ Modal styles
   modalOverlay: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.5)",
